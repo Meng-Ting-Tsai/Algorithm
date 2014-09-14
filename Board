@@ -1,0 +1,179 @@
+public class Board {    
+    private char[][] puzzle;
+    private int N;
+    private int zeroRow;
+    private int zeroCol;
+    private int manhattanN;
+    public Board(int[][] blocks) {        
+        N = blocks[0].length;
+        puzzle = new char[N][N];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                puzzle[i][j] = (char) blocks[i][j];
+                 if (blocks[i][j] == 0) {
+                    zeroRow = i;
+                    zeroCol = j;
+                }
+                if (!isZero(i, j) 
+                        && (int) puzzle[i][j] != i*N + j + 1)
+                    manhattanN += manhattanDis(i, j);               
+            }
+        }
+    }
+    private Board(char[][] blocks) {        
+        N = blocks[0].length;
+        puzzle = new char[N][N];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                puzzle[i][j] = blocks[i][j];
+                 if (blocks[i][j] == 0) {
+                    zeroRow = i;
+                    zeroCol = j;
+                }
+                if (!isZero(i, j) 
+                        && (int) puzzle[i][j] != i*N + j + 1)
+                    manhattanN += manhattanDis(i, j);               
+            }
+        }
+    }
+    private Board(char[][] blocks, int manhattan, int row, int col, 
+                  int dimension){
+        N = dimension;
+        manhattanN = manhattan;
+        zeroRow = row;
+        zeroCol = col;
+        puzzle = new char[N][N];
+         for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                puzzle[i][j] = blocks[i][j];         
+            }
+        }
+    }
+    
+    private boolean isZero(int i, int j) {
+        return (int) puzzle[i][j] == 0;
+    }
+    public int dimension() {
+        return N;
+    }
+    
+    public int hamming() {
+        int count = 0;
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if (!isZero(i, j) && (int) puzzle[i][j] != i*N + j + 1) count++;
+            }
+        }
+        return count;
+    }
+    
+    public int manhattan() {    
+        return manhattanN;
+    }
+    
+    public boolean isGoal() {
+        return manhattanN == 0;
+    }
+    
+    public Board twin() {
+        Board twin = new Board(puzzle);
+        for (int i = 0; i < N; i++) {
+            if(i == zeroRow) continue;
+            twin.swap(i, 0, i, 1);
+                return twin;            
+        }
+        return twin;
+    }
+    
+    private void swap(int a, int b, int c, int d) {
+        int count = 0;
+        if ((int) puzzle[a][b] == 0) count = manhattanDis(c, d);
+        else if ((int) puzzle[c][d] == 0) count = manhattanDis(a, b);
+        else count = manhattanDis(a, b) + manhattanDis(c, d);
+        manhattanN = manhattanN - count;
+        char temp = puzzle[a][b];
+        puzzle[a][b] = puzzle[c][d];
+        puzzle[c][d] = temp;
+        if ((int) puzzle[a][b] == 0) {
+            count = manhattanDis(c, d);
+            zeroRow = a;
+            zeroCol = b;
+        } else if ((int) puzzle[c][d] == 0) {
+            count = manhattanDis(a, b);
+            zeroRow = c;
+            zeroCol = d;
+        }
+        else count = manhattanDis(a, b) + manhattanDis(c, d);
+        manhattanN = manhattanN + count;
+    }
+    
+    public boolean equals(Object y) {
+        if (y == this) return true;
+        if (y == null) return false;
+        if (y.getClass() != this.getClass()) return false;
+        Board that = (Board) y;
+        if (that.N != this.N) return false;
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if (puzzle[i][j] != that.puzzle[i][j]) return false;
+            }
+        }
+        return true;
+    }
+    
+    public Iterable<Board> neighbors() {
+        Queue it = new Queue<Board>();
+        if (zeroRow == 0) {
+            Board n = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            n.swap(zeroRow, zeroCol, zeroRow+1, zeroCol);
+            it.enqueue(n);
+        } else if (zeroRow == N-1) {
+            Board n = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            n.swap(zeroRow, zeroCol, zeroRow-1, zeroCol);
+            it.enqueue(n);
+        } else {
+            Board n1 = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            Board n2 = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            n1.swap(zeroRow, zeroCol, zeroRow-1, zeroCol);
+            n2.swap(zeroRow, zeroCol, zeroRow+1, zeroCol);
+            it.enqueue(n1);
+            it.enqueue(n2);
+        }
+        
+        if (zeroCol == 0) {
+            Board n = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            n.swap(zeroRow, zeroCol, zeroRow, zeroCol+1);
+            it.enqueue(n);
+        } else if (zeroCol == N-1) {
+            Board n = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            n.swap(zeroRow, zeroCol, zeroRow, zeroCol-1);
+            it.enqueue(n);
+        } else {
+            Board n1 = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            Board n2 = new Board(puzzle, manhattanN, zeroRow, zeroCol, N);
+            n1.swap(zeroRow, zeroCol, zeroRow, zeroCol-1);
+            n2.swap(zeroRow, zeroCol, zeroRow, zeroCol+1);
+            it.enqueue(n1);
+            it.enqueue(n2);
+        }
+        return it;        
+    }
+    
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append(N + "\n");
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                s.append(String.format("%2d ", (int) puzzle[i][j]));
+            }
+            s.append("\n");
+        }
+        return s.toString();
+    }
+    
+    private int manhattanDis(int i, int j) {
+        int number = puzzle[i][j];
+        if (number % N == 0) return (N-j-1)+(Math.abs(number/N-(i+1)));
+        else return Math.abs(j-(number % N -1)) + Math.abs(i - number/N);
+    }
+}
